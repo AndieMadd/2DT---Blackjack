@@ -1,0 +1,7 @@
+18/02/21
+Today i have started to to plan my 2DT project. 
+I am planning to create a multiplayer blackjack game, using sockets in python
+To start planning, I have created a Trello Board at https://trello.com/b/diiif8yY/maddock-andrew-2dt
+22/02/21
+I have started learning how to use socket and threading. currently I have a server which can communicate
+with two clients. this base will be used ad a foundation for the blackjack game.
