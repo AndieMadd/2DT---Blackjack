@@ -19,57 +19,39 @@ room = []
 #connected = False
 
 
-# def handleClientIncoming(conn, addr):
-#     global userList, msgList, ROOM_OPEN, room
-#     if not ROOM_OPEN:
-#         sendMsg(conn, "Room Closed")
-#         conn.close()
-#     connected = False
-#     while not connected:
-#         user_len = int(conn.recv(HEADER).decode('utf-8'))
-#         user_name = conn.recv(user_len).decode('utf-8')
-#         in_users = False
-#         if len(userList):
-#             if any([user[0] == user_name for user in userList]):
-#                 sendMsg(conn, '0')
-#                 in_users = True
-#         if not in_users:
-#             userList.append((user_name, conn))
-#             sendMsg(conn, '1')
-#             connected = True
-#     while connected:
-#         msg_len = int(conn.recv(HEADER).decode('utf-8'))
-#         msg = conn.recv(msg_len).decode('utf-8')
-#         if msg == DISCONNECT_MSG:
-#             connected = False
-#             msgList.append(("SERVER", f"{user_name} Disconnected"))
-#             userList.pop(userList.index((user_name, conn)))
-#         else:
-#             msgList.append((user_name, msg))
-#     conn.close()
-
 def handleClientIncoming(conn, addr):
-    global room
+    global room, ROOM_OPEN
     user_len = conn.recv(HEADER).decode('utf-8')
     username = conn.recv(int(user_len)).decode('utf-8')
-    if username in room:
+    while any([username in user for user in room]):
         sendMsg(conn, '0')
+        user_len = conn.recv(HEADER).decode('utf-8')
+        username = conn.recv(int(user_len)).decode('utf-8')
     else:
-        room.append(username)
+        room.append((username, conn))
         sendMsg(conn, '1')
-    while True:
+    while ROOM_OPEN:
         msg_len = conn.recv(HEADER).decode('utf-8')
         msg = conn.recv(int(msg_len)).decode('utf-8')
+        if msg == READY_MSG:
+            ROOM_OPEN = False
+            startRoom(room)
 
 
-def messagesOutgoing():
-    global msgList, userList
-    while True:
-        if len(msgList):
-            for msg in msgList:
-                for user in userList:
-                    sendMsg(user[1], msg)
-            msgList.pop(0)
+def startRoom(userList):
+    users = [user[0] for user in userList]
+    for user in userList:
+        sendMsg(user[1], users)
+
+
+# def messagesOutgoing():
+#     global msgList, userList
+#     while True:
+#         if len(msgList):
+#             for msg in msgList:
+#                 for user in userList:
+#                     sendMsg(user[1], msg)
+#             msgList.pop(0)
 
 
 def sendMsg(conn, msg):
@@ -83,7 +65,7 @@ def sendMsg(conn, msg):
 
 def start():
     server.listen()
-    outGoingThread = threading.Thread(target=messagesOutgoing).start()
+    # outGoingThread = threading.Thread(target=messagesOutgoing).start()
     while True:
         conn, addr = server.accept()
         incomingThread = threading.Thread(
