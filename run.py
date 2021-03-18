@@ -1,0 +1,20 @@
+import os
+import keyboard
+import time
+os.system('start cmd /c py server.py')
+time.sleep(0.3)
+keyboard.press_and_release('windows+right')
+time.sleep(0.3)
+keyboard.press_and_release('esc')
+time.sleep(0.3)
+os.system('start cmd /c py client.py')
+time.sleep(0.3)
+keyboard.press_and_release('windows+left')
+time.sleep(0.3)
+keyboard.press_and_release('windows+up')
+time.sleep(0.3)
+os.system('start cmd /c py client.py')
+time.sleep(0.3)
+keyboard.press_and_release('windows+left')
+time.sleep(0.3)
+keyboard.press_and_release('windows+down')

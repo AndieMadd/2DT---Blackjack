@@ -3,6 +3,7 @@ import threading
 import os
 import json
 
+os.system('title client')
 
 HEADER = 64
 HOST = '10.70.4.139'
@@ -76,25 +77,6 @@ def show():
                 printedMessages.append(message)
 
 
-# def start():
-#     global connected, messages, USER_NAME
-#     while not connected:
-#         username = input("What Is Your Name: ")
-#         send(username)
-#         status_len = client.recv(HEADER).decode('utf-8')
-#         status = json.loads(client.recv(int(status_len)).decode('utf-8'))
-#         if status:
-#             USER_NAME = username
-#             messages.append('')
-#             connected = True
-#             incomingThread.start()
-#             printThread.start()
-#         else:
-#             print("Name Already In Use")
-#     while connected:
-#         msg = input()
-#         send(f"{username}: {msg}")
-
 def start():
     global connected
     while not connected:
@@ -102,6 +84,8 @@ def start():
         send(username)
         status_len = client.recv(HEADER).decode('utf-8')
         status = json.loads(client.recv(int(status_len)).decode('utf-8'))
+        if status:
+            connected = True
 
 
 outgoingThread = threading.Thread(target=start).start()

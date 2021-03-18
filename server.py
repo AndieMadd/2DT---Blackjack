@@ -1,7 +1,9 @@
 import socket
 import threading
 import json
+import os
 
+os.system('title THE VERY EPIC SERVER')
 
 HEADER = 64
 HOST = socket.gethostbyname(socket.gethostname())
@@ -25,17 +27,19 @@ def handleClientIncoming(conn, addr):
     username = conn.recv(int(user_len)).decode('utf-8')
     while any([username in user for user in room]):
         sendMsg(conn, '0')
-        user_len = conn.recv(HEADER).decode('utf-8')
-        username = conn.recv(int(user_len)).decode('utf-8')
+        try:
+            user_len = conn.recv(HEADER).decode('utf-8')
+            username = conn.recv(int(user_len)).decode('utf-8')
     else:
         room.append((username, conn))
         sendMsg(conn, '1')
     while ROOM_OPEN:
         msg_len = conn.recv(HEADER).decode('utf-8')
-        msg = conn.recv(int(msg_len)).decode('utf-8')
-        if msg == READY_MSG:
-            ROOM_OPEN = False
-            startRoom(room)
+        if msg_len:
+            msg = conn.recv(int(msg_len)).decode('utf-8')
+            if msg == READY_MSG:
+                ROOM_OPEN = False
+                startRoom(room)
 
 
 def startRoom(userList):
