@@ -3,15 +3,16 @@ import threading
 import os
 import json
 
-os.system('title client')
+os.system('title Client')
 
 HEADER = 64
-HOST = '10.70.4.139'
+HOST = '10.70.5.28'
 PORT = 5050
 DISCONNECT_MSG = "!DC"
+READY_MSG = "!READY"
 MSG_MAX = 20
 USER_NAME = ""
-USEr_LIST = []
+USER_LIST = []
 
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -51,12 +52,16 @@ def send(msg):
 
 
 def recieve():
-    global connected, messages
+    global connected, messages, USER_LIST
     while connected:
         try:
             recv_len = client.recv(HEADER).decode('utf-8')
             newMsg = json.loads(client.recv(int(recv_len)).decode('utf-8'))
-            messages.append(newMsg)
+            if type(newMsg) == list:
+                USER_LIST = newMsg
+                messages.append('')
+            else:
+                messages.append(newMsg)
             if len(messages) > MSG_MAX:
                 messages = messages[(len(messages) - MSG_MAX):]
         except:
@@ -70,7 +75,10 @@ def show():
         if messages != printedMessages:
             os.system('cls')
             printedMessages = []
-            print(f'USER: {USER_NAME}')
+            print("USERS: ", end='')
+            for user in USER_LIST:
+                print(f"[{user}]", end=' ')
+            print()
             print('-' * 20)
             for message in messages:
                 print(message)
@@ -78,14 +86,28 @@ def show():
 
 
 def start():
-    global connected
+    global connected, USER_NAME
     while not connected:
         username = input("What Is Your Username: ")
         send(username)
         status_len = client.recv(HEADER).decode('utf-8')
-        status = json.loads(client.recv(int(status_len)).decode('utf-8'))
-        if status:
+        status = int(json.loads(client.recv(int(status_len)).decode('utf-8')))
+        if status != 0:
+            USER_NAME = username
             connected = True
+    if status == 1:
+        input("Press Enter When All Clients Are Ready. ")
+        send(READY_MSG)
+        status_len = client.recv(HEADER).decode('utf-8')
+        status = json.loads(client.recv(int(status_len)).decode('utf-8'))
+    else:
+        print("Please Wait Until ALl Clients Are Ready.")
+        status_len = client.recv(HEADER).decode('utf-8')
+        status = json.loads(client.recv(int(status_len)).decode('utf-8'))
+    incomingThread.start()
+    printThread.start()
+    while True:
+        send(input())
 
 
 outgoingThread = threading.Thread(target=start).start()

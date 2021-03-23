@@ -2,8 +2,10 @@ import socket
 import threading
 import json
 import os
+import random
 
-os.system('title THE VERY EPIC SERVER')
+
+os.system('title Server')
 
 HEADER = 64
 HOST = socket.gethostbyname(socket.gethostname())
@@ -15,9 +17,8 @@ ROOM_OPEN = True
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server.bind((HOST, PORT))
 
-userList = []  # (username, conn)
 msgList = []  # (conn, message)
-room = []
+room = []  # (username, conn, score)
 #connected = False
 
 
@@ -30,32 +31,27 @@ def handleClientIncoming(conn, addr):
         try:
             user_len = conn.recv(HEADER).decode('utf-8')
             username = conn.recv(int(user_len)).decode('utf-8')
+        except:
+            pass
     else:
-        room.append((username, conn))
-        sendMsg(conn, '1')
+        user = [username, conn, 0]
+        room.append(user)
+        sendMsg(conn, len(room))
     while ROOM_OPEN:
+        if room.index(user) == 0:
+            msg_len = conn.recv(HEADER).decode('utf-8')
+            if msg_len:
+                msg = conn.recv(int(msg_len)).decode('utf-8')
+                if msg == READY_MSG and ROOM_OPEN == True:
+                    ROOM_OPEN = False
+                    users = [user[0] for user in room]
+                    sendAll('1')
+                    sendAll(users)
+    while not ROOM_OPEN:
         msg_len = conn.recv(HEADER).decode('utf-8')
         if msg_len:
             msg = conn.recv(int(msg_len)).decode('utf-8')
-            if msg == READY_MSG:
-                ROOM_OPEN = False
-                startRoom(room)
-
-
-def startRoom(userList):
-    users = [user[0] for user in userList]
-    for user in userList:
-        sendMsg(user[1], users)
-
-
-# def messagesOutgoing():
-#     global msgList, userList
-#     while True:
-#         if len(msgList):
-#             for msg in msgList:
-#                 for user in userList:
-#                     sendMsg(user[1], msg)
-#             msgList.pop(0)
+            sendAll(f"{username}:{msg}")
 
 
 def sendMsg(conn, msg):
@@ -65,6 +61,12 @@ def sendMsg(conn, msg):
     send_len += b' ' * (HEADER - len(send_len))
     conn.send(send_len)
     conn.send(message)
+
+
+def sendAll(msg):
+    global room
+    for user in room:
+        sendMsg(user[1], msg)
 
 
 def start():
