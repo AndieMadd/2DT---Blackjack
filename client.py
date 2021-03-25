@@ -2,6 +2,7 @@ import socket
 import threading
 import os
 import json
+import keyboard
 
 os.system('title Client')
 
@@ -13,7 +14,7 @@ READY_MSG = "!READY"
 MSG_MAX = 20
 USER_NAME = ""
 USER_LIST = []
-
+active = 1
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -22,6 +23,7 @@ client.connect((HOST, PORT))
 addr = []
 connected = False
 messages = []
+prev_winner = ""
 
 # -----TIMELINE
 # Client Connects
@@ -40,7 +42,7 @@ messages = []
 
 
 def send(msg):
-    global connected, messages
+    global connected
     message = msg.encode("utf-8")
     msg_len = len(message)
     send_len = str(msg_len).encode('utf-8')
@@ -52,7 +54,7 @@ def send(msg):
 
 
 def recieve():
-    global connected, messages, USER_LIST
+    global connected, messages, USER_LIST, active, prev_winner
     while connected:
         try:
             recv_len = client.recv(HEADER).decode('utf-8')
@@ -60,16 +62,33 @@ def recieve():
             if type(newMsg) == list:
                 USER_LIST = newMsg
                 messages.append('')
+            elif type(newMsg) == dict:
+                messages = []
+                for user in newMsg:
+                    if newMsg[user][1]:
+                        messages.append(
+                            f'{user} is at {newMsg[user][0]} points.')
+                    else:
+                        messages.append(
+                            f'{user} is sitting at {newMsg[user][0]}')
+                if newMsg[USER_NAME][1]:
+                    messages.append('\nWould you like to Hit (h) or Sit (s) ?')
+                else:
+                    messages.append(
+                        '\nPlease wait until all users have finished')
+                    active = 0
+            elif type(newMsg) == bool:
+                active = 1
+                messages.append('')
             else:
                 messages.append(newMsg)
-            if len(messages) > MSG_MAX:
-                messages = messages[(len(messages) - MSG_MAX):]
+                prev_winner = newMsg
         except:
             pass
 
 
 def show():
-    global messages, connected, USER_NAME
+    global messages, connected, USER_NAME, prev_winner
     printedMessages = []
     while connected:
         if messages != printedMessages:
@@ -79,6 +98,7 @@ def show():
             for user in USER_LIST:
                 print(f"[{user}]", end=' ')
             print()
+            print(prev_winner)
             print('-' * 20)
             for message in messages:
                 print(message)
@@ -107,7 +127,8 @@ def start():
     incomingThread.start()
     printThread.start()
     while True:
-        send(input())
+        if active:
+            send(input())
 
 
 outgoingThread = threading.Thread(target=start).start()
