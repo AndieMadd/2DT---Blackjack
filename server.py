@@ -76,14 +76,14 @@ def checkWinner(scoreDict):
     potentialWinners = {
         user: scoreDict[user][0] for user in scoreDict if scoreDict[user][0] <= 21}
     if len(potentialWinners) == 0:
-        return 0
+        return "\033[043mEverybody Went Over 21\033[m"
     winnerValue = max(potentialWinners.values())
     winningUsers = [k for k, v in potentialWinners.items() if v == winnerValue]
     winners = {user: winnerValue for user in winningUsers}
     if len(winningUsers) == 1:
-        return f"{winningUsers[0]} won with {winnerValue} points."
+        return f"\033[42m{winningUsers[0]} won with {winnerValue} points.\033[m"
     else:
-        return f"{[user for user in winningUsers]} all won with {winnerValue} points."
+        return f"\033[42m{[user for user in winningUsers]} all won with {winnerValue} points.\033[m"
 
 
 def sendMsg(conn, msg):

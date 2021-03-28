@@ -74,14 +74,14 @@ def recieve():
                 if newMsg[USER_NAME][1]:
                     messages.append('\nWould you like to Hit (h) or Sit (s) ?')
                 else:
+                    active = 0
                     messages.append(
                         '\nPlease wait until all users have finished')
-                    active = 0
             elif type(newMsg) == bool:
                 active = 1
                 messages.append('')
             else:
-                messages.append(newMsg)
+                # messages.append(newMsg)
                 prev_winner = newMsg
         except:
             pass
@@ -127,8 +127,9 @@ def start():
     incomingThread.start()
     printThread.start()
     while True:
+        msg = input()
         if active:
-            send(input())
+            send(msg)
 
 
 outgoingThread = threading.Thread(target=start).start()
