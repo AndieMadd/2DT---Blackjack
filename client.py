@@ -6,13 +6,13 @@ import json
 
 # ---------- Initial Variables
 HEADER = 64
-HOST = '192.168.86.29'
+HOST = '10.70.5.33'
 PORT = 5050
 READY_MSG = "!READY"
 USER_NAME = ""
 USER_LIST = []
 ACTIVE = True
-DISPLAY_LIST = []
+DISPLAY_QUEUE = []
 CONNECTED = False
 WINNER_STATUS = ""
 
@@ -44,14 +44,15 @@ def recieveMsg():
 
 def gameState():
     # ----- The Main Function, runs the core game loop
-    global CONNECTED, DISPLAY_LIST, USER_LIST, ACTIVE, WINNER_STATUS
+    global CONNECTED, DISPLAY_QUEUE, USER_LIST, ACTIVE, WINNER_STATUS
 
     # Recieves a list of usernames, and generates a list of users
     # Then for each user, it adds the the display queue a string saying they are at 0 points
     # This runs on the first round, so users have no score to calculate
     USER_LIST = [[user, 0] for user in list(recieveMsg())]
     for user in USER_LIST:
-        DISPLAY_LIST.append(f"{user[0]} is at 0 points")
+        DISPLAY_QUEUE.append(f"{user[0]} is at 0 points")
+    DISPLAY_QUEUE.append("\nWould you like to hit (h) or sit (s) ?")
     # Starts the thread to manage display
     PrintThread.start()
     while CONNECTED:
@@ -65,13 +66,13 @@ def gameState():
                 [user[0], user[1]+(1 if user[0] in msg else 0)] for user in USER_LIST]
             ACTIVE = True
             # Clears the display queue, and then adds a string for each user, putting their score to 0
-            DISPLAY_LIST = []
+            DISPLAY_QUEUE = []
             for user in USER_LIST:
-                DISPLAY_LIST.append(f"{user[0]} is at 0 points")
+                DISPLAY_QUEUE.append(f"{user[0]} is at 0 points")
         # If the information is a dict, then it is a game state
         elif type(msg) == dict:
             # Clears the display queue
-            DISPLAY_LIST = []
+            DISPLAY_QUEUE = []
             # Sets the active status equal to the user's active status on the server
             ACTIVE = msg[USER_NAME][1]
             # Makes sure the user list is up to date
@@ -81,20 +82,21 @@ def gameState():
                 name = user[0]
                 if msg[name][1] == 1:
                     # if the user is still playing, add the intial string with their score
-                    DISPLAY_LIST.append(
+                    DISPLAY_QUEUE.append(
                         f"{name} is at {msg[name][0]} points")
                 else:
                     # else add the alternitive string stating the score they are sitting on
-                    DISPLAY_LIST.append(
+                    DISPLAY_QUEUE.append(
                         f"{name} is sitting at {msg[name][0]} points")
+        DISPLAY_QUEUE.append("\nWould you like to hit (h) or sit (s) ?")
 
 
 def show():
     # ----- Function that manages the console screen
-    global DISPLAY_LIST, CONNECTED, USER_NAME, WINNER_STATUS
+    global DISPLAY_QUEUE, CONNECTED, USER_NAME, WINNER_STATUS
     printedMessages = []
     while CONNECTED:
-        if DISPLAY_LIST != printedMessages:
+        if DISPLAY_QUEUE != printedMessages:
             # if the display queue has been updated, then clear the screen
             os.system('cls')
             printedMessages = []
@@ -107,7 +109,7 @@ def show():
             print(WINNER_STATUS)
             print('-' * 20)
             # Prints the messages in the display queue and adds them to the printed messages
-            for message in DISPLAY_LIST:
+            for message in DISPLAY_QUEUE:
                 print(message)
                 printedMessages.append(message)
 

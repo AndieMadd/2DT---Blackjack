@@ -126,7 +126,6 @@ def checkWinner(scoreDict):
     for client in ROOM:
         if client.username in winningUsers:
             client.wins += 1
-            print(client.wins)
 
     winners = {user: winnerValue for user in winningUsers}
     if len(winningUsers) == 1:
@@ -154,7 +153,6 @@ def start():
             target=handleClientIncoming, args=(conn, addr)).start()
 
 
-print(f"Starting server on {HOST}")
-
 if __name__ == "__main__":
+    print(f"Starting server on {HOST}")
     start()
